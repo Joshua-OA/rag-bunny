@@ -1,99 +1,429 @@
+import { useState, useRef, useEffect } from "react";
 import {
-  Lightning,
   Question,
-  Gift,
-  ToggleLeft,
-  FileText,
-  Sparkle,
-  User,
-  Browser,
-  Plus,
   PaperPlaneRight,
   Paperclip,
-  Microphone,
-  SquaresFour,
+  SidebarSimple,
+  Rabbit,
+  UserCircle,
+  FilePdf,
+  FileText,
+  Spinner,
+  At,
+  X,
 } from "@phosphor-icons/react";
+import type { Chat, PdfFile } from "../App";
+import type { Citation } from "../api";
 
-const prompts = [
-  { icon: FileText, label: "Write copy", bg: "bg-orange-100", color: "text-orange-500" },
-  { icon: Sparkle, label: "Image generation", bg: "bg-blue-100", color: "text-blue-500" },
-  { icon: User, label: "Create avatar", bg: "bg-green-100", color: "text-green-500" },
-  { icon: Browser, label: "Write code", bg: "bg-pink-100", color: "text-pink-500" },
-];
+interface MainContentProps {
+  chat: Chat | null;
+  theme: "light" | "dark";
+  sidebarOpen: boolean;
+  isLoading: boolean;
+  hasProcessedDocs: boolean;
+  processedPdfs: PdfFile[];
+  selectedPdf: PdfFile | null;
+  onSelectPdf: (pdfId: string | null) => void;
+  onSendMessage: (content: string) => void;
+  onUploadPdf: (file: File) => void;
+  onToggleSidebar: () => void;
+}
 
-export default function MainContent() {
+function CitationCard({ citation, isDark }: { citation: Citation; isDark: boolean }) {
   return (
-    <main className="flex-1 bg-white flex flex-col relative">
+    <div
+      className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs ${
+        isDark
+          ? "border-gray-700 bg-gray-800/50"
+          : "border-border bg-gray-50"
+      }`}
+    >
+      <FilePdf size={16} className="text-red-500 shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <div className={`font-semibold truncate ${isDark ? "text-gray-300" : "text-main"}`}>
+          {citation.document}
+          {citation.page > 0 && (
+            <span className={`font-normal ml-1 ${isDark ? "text-gray-500" : "text-tertiary"}`}>
+              p.{citation.page}
+            </span>
+          )}
+        </div>
+        <div className={`mt-1 leading-relaxed line-clamp-2 ${isDark ? "text-gray-400" : "text-secondary"}`}>
+          {citation.snippet}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function isTxt(name: string) {
+  return name.toLowerCase().endsWith(".txt");
+}
+
+export default function MainContent({
+  chat,
+  theme,
+  sidebarOpen,
+  isLoading,
+  hasProcessedDocs,
+  processedPdfs,
+  selectedPdf,
+  onSelectPdf,
+  onSendMessage,
+  onUploadPdf,
+  onToggleSidebar,
+}: MainContentProps) {
+  const [input, setInput] = useState("");
+  const [showMentionMenu, setShowMentionMenu] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState("");
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const mentionMenuRef = useRef<HTMLDivElement>(null);
+  const isDark = theme === "dark";
+
+  const chatDisabled = !hasProcessedDocs || isLoading;
+
+  const filteredMentionPdfs = processedPdfs.filter((p) =>
+    p.name.toLowerCase().includes(mentionFilter.toLowerCase())
+  );
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat?.messages.length, isLoading]);
+
+  // Reset mention index when filter changes
+  useEffect(() => {
+    setMentionIndex(0);
+  }, [mentionFilter]);
+
+  // Close mention menu on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        mentionMenuRef.current &&
+        !mentionMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowMentionMenu(false);
+      }
+    }
+    if (showMentionMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMentionMenu]);
+
+  const handleSelectMention = (pdf: PdfFile) => {
+    onSelectPdf(pdf.id);
+    // Remove the @query from input
+    const atIdx = input.lastIndexOf("@");
+    const before = atIdx >= 0 ? input.slice(0, atIdx) : input;
+    setInput(before);
+    setShowMentionMenu(false);
+    setMentionFilter("");
+    inputRef.current?.focus();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+
+    // Detect @ trigger
+    const atIdx = val.lastIndexOf("@");
+    if (atIdx >= 0 && processedPdfs.length > 0) {
+      const query = val.slice(atIdx + 1);
+      // Only show menu if @ is at start or preceded by a space
+      if (atIdx === 0 || val[atIdx - 1] === " ") {
+        setMentionFilter(query);
+        setShowMentionMenu(true);
+        return;
+      }
+    }
+    setShowMentionMenu(false);
+  };
+
+  const handleSubmit = () => {
+    if (!input.trim() || chatDisabled) return;
+    onSendMessage(input.trim());
+    setInput("");
+    setShowMentionMenu(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showMentionMenu && filteredMentionPdfs.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex((i) => (i + 1) % filteredMentionPdfs.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex((i) => (i - 1 + filteredMentionPdfs.length) % filteredMentionPdfs.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        handleSelectMention(filteredMentionPdfs[mentionIndex]);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowMentionMenu(false);
+        return;
+      }
+    }
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (
+      file &&
+      (file.type === "application/pdf" || file.type === "text/plain")
+    ) {
+      onUploadPdf(file);
+    }
+    e.target.value = "";
+  };
+
+  const charCount = input.length;
+
+  const placeholderText = !hasProcessedDocs
+    ? "Upload a document first to start asking questions..."
+    : "Ask anything about your documents... (type @ to select a doc)";
+
+  return (
+    <main className={`flex-1 flex flex-col relative transition-colors ${isDark ? "bg-gray-950" : "bg-white"}`}>
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6">
-        <div className="text-lg font-semibold text-main">AI Chat</div>
+      <header className={`h-16 flex items-center justify-between px-6 border-b ${isDark ? "border-gray-800" : "border-transparent"}`}>
+        <div className="flex items-center gap-3">
+          {!sidebarOpen && (
+            <SidebarSimple
+              size={20}
+              className={`cursor-pointer ${isDark ? "text-gray-500 hover:text-gray-300" : "text-tertiary hover:text-secondary"}`}
+              onClick={onToggleSidebar}
+            />
+          )}
+          <div className={`text-lg font-semibold ${isDark ? "text-white" : "text-main"}`}>AI Chat</div>
+        </div>
         <div className="flex items-center gap-4">
-          <button className="bg-gray-900 text-white border-none px-4 py-2 rounded-full text-[13px] font-semibold flex items-center gap-1.5 cursor-pointer">
-            <Lightning size={16} weight="fill" className="text-yellow-400" />
-            Upgrade
-          </button>
-          <Question size={20} className="text-secondary cursor-pointer" />
-          <Gift size={20} className="text-secondary cursor-pointer" />
-          <ToggleLeft size={20} weight="fill" className="text-main cursor-pointer" />
+          <Question size={20} className={`cursor-pointer ${isDark ? "text-gray-500" : "text-secondary"}`} />
         </div>
       </header>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-10 overflow-y-auto">
-        <h1 className="text-[32px] font-bold text-main mb-3">Welcome to Script</h1>
-        <p className="text-[15px] text-secondary mb-10">
-          Get started by Script a task and Chat can do the rest. Not sure where to start?
-        </p>
-
-        {/* Prompt Cards */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-[560px] mb-15">
-          {prompts.map((prompt) => (
-            <div
-              key={prompt.label}
-              className="flex items-center justify-between px-4 py-3 border border-border rounded-xl bg-white cursor-pointer hover:border-gray-300 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${prompt.bg} ${prompt.color}`}>
-                  <prompt.icon size={18} weight="fill" />
-                </div>
-                <span className="text-sm font-medium text-main">{prompt.label}</span>
-              </div>
-              <Plus size={16} className="text-tertiary" />
-            </div>
-          ))}
+      {!chat ? (
+        /* Welcome Screen */
+        <div className="flex-1 flex flex-col items-center justify-center px-10 overflow-y-auto">
+          <div className={`mb-4 ${isDark ? "text-white" : "text-accent-blue"}`}>
+            <Rabbit size={48} weight="fill" />
+          </div>
+          <h1 className={`text-[32px] font-bold mb-3 ${isDark ? "text-white" : "text-main"}`}>Welcome to Rag Bunny</h1>
+          <p className={`text-[15px] mb-10 ${isDark ? "text-gray-400" : "text-secondary"}`}>
+            Upload your PDFs and ask questions. Rag Bunny will find the answers for you.
+          </p>
         </div>
+      ) : (
+        /* Messages */
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="max-w-[760px] mx-auto space-y-6">
+            {chat.messages.map((msg) => (
+              <div key={msg.id} className="flex gap-3">
+                <div className="shrink-0 mt-1">
+                  {msg.role === "user" ? (
+                    <UserCircle size={28} weight="fill" className={isDark ? "text-gray-500" : "text-gray-400"} />
+                  ) : (
+                    <Rabbit size={28} weight="fill" className={isDark ? "text-white" : "text-accent-blue"} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-semibold mb-1 ${isDark ? "text-white" : "text-main"}`}>
+                    {msg.role === "user" ? "You" : "Rag Bunny"}
+                  </div>
+                  <div className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? "text-gray-300" : "text-secondary"}`}>
+                    {msg.content}
+                  </div>
+                  {/* Citations */}
+                  {msg.citations && msg.citations.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className={`text-xs font-semibold ${isDark ? "text-gray-500" : "text-tertiary"}`}>
+                        Sources
+                      </div>
+                      {msg.citations.map((c, i) => (
+                        <CitationCard key={i} citation={c} isDark={isDark} />
+                      ))}
+                    </div>
+                  )}
+                  {/* Confidence badge */}
+                  {msg.confidence && (
+                    <div className={`mt-2 inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      msg.confidence === "high"
+                        ? "bg-green-100 text-green-700"
+                        : msg.confidence === "medium"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                    }`}>
+                      {msg.confidence} confidence
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
 
-        {/* Input */}
-        <div className="w-full max-w-[760px] mx-auto mb-6 border border-border rounded-xl bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]">
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="shrink-0 mt-1">
+                  <Rabbit size={28} weight="fill" className={isDark ? "text-white" : "text-accent-blue"} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-semibold mb-1 ${isDark ? "text-white" : "text-main"}`}>Rag Bunny</div>
+                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-400" : "text-secondary"}`}>
+                    <Spinner size={16} className="animate-spin" />
+                    Searching your documents...
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="px-6 pb-4">
+        <div className={`w-full max-w-[760px] mx-auto border rounded-xl p-4 transition-colors relative ${
+          isDark ? "bg-gray-900 border-gray-700 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.3)]" : "bg-white border-border shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]"
+        }`}>
+          {/* Selected document badge */}
+          {selectedPdf && (
+            <div className="flex items-center gap-1.5 mb-3">
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
+                isDark ? "bg-gray-800 text-gray-300 border border-gray-700" : "bg-blue-50 text-blue-700 border border-blue-200"
+              }`}>
+                {isTxt(selectedPdf.name) ? (
+                  <FileText size={14} className="text-blue-500" />
+                ) : (
+                  <FilePdf size={14} className="text-red-500" />
+                )}
+                {selectedPdf.name}
+                <button
+                  onClick={() => onSelectPdf(null)}
+                  className={`ml-0.5 bg-transparent border-none cursor-pointer p-0 ${
+                    isDark ? "text-gray-500 hover:text-gray-300" : "text-blue-400 hover:text-blue-600"
+                  }`}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* @ mention dropdown */}
+          {showMentionMenu && filteredMentionPdfs.length > 0 && (
+            <div
+              ref={mentionMenuRef}
+              className={`absolute bottom-full left-4 mb-2 w-72 max-h-48 overflow-y-auto rounded-xl border shadow-lg z-10 ${
+                isDark ? "bg-gray-800 border-gray-700" : "bg-white border-border"
+              }`}
+            >
+              <div className={`px-3 py-2 text-[11px] font-semibold uppercase tracking-wide ${isDark ? "text-gray-500" : "text-tertiary"}`}>
+                Select a document
+              </div>
+              {filteredMentionPdfs.map((pdf, i) => (
+                <div
+                  key={pdf.id}
+                  onClick={() => handleSelectMention(pdf)}
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm transition-colors ${
+                    i === mentionIndex
+                      ? isDark
+                        ? "bg-gray-700 text-white"
+                        : "bg-blue-50 text-main"
+                      : isDark
+                        ? "text-gray-300 hover:bg-gray-700"
+                        : "text-secondary hover:bg-gray-50"
+                  }`}
+                >
+                  {isTxt(pdf.name) ? (
+                    <FileText size={16} className="text-blue-500 shrink-0" />
+                  ) : (
+                    <FilePdf size={16} className="text-red-500 shrink-0" />
+                  )}
+                  <span className="truncate">{pdf.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <input
+              ref={inputRef}
               type="text"
-              defaultValue="Summarize the latest"
-              placeholder="Ask anything..."
-              className="w-full border-none outline-none text-[15px] text-main bg-transparent"
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholderText}
+              disabled={!hasProcessedDocs || isLoading}
+              className={`w-full border-none outline-none text-[15px] bg-transparent ${isDark ? "text-white placeholder:text-gray-600" : "text-main"} ${chatDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
             />
-            <button className="bg-transparent border-none cursor-pointer text-main text-xl flex items-center justify-center">
+            <button
+              onClick={handleSubmit}
+              disabled={!input.trim() || chatDisabled}
+              className={`bg-transparent border-none cursor-pointer text-xl flex items-center justify-center transition-colors ${
+                input.trim() && !chatDisabled
+                  ? isDark ? "text-white" : "text-accent-blue"
+                  : isDark ? "text-gray-600" : "text-gray-300"
+              }`}
+            >
               <PaperPlaneRight size={20} />
             </button>
           </div>
-          <div className="flex items-center justify-between border-t border-border pt-3">
+          <div className={`flex items-center justify-between border-t pt-3 ${isDark ? "border-gray-700" : "border-border"}`}>
             <div className="flex gap-4">
-              <div className="flex items-center gap-1.5 text-secondary text-[13px] font-medium cursor-pointer">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex items-center gap-1.5 text-[13px] font-medium cursor-pointer ${isDark ? "text-gray-400 hover:text-gray-200" : "text-secondary hover:text-main"}`}
+              >
                 <Paperclip size={16} /> Attach
               </div>
-              <div className="flex items-center gap-1.5 text-secondary text-[13px] font-medium cursor-pointer">
-                <Microphone size={16} /> Voice Message
-              </div>
-              <div className="flex items-center gap-1.5 text-secondary text-[13px] font-medium cursor-pointer">
-                <SquaresFour size={16} /> Browse Prompts
-              </div>
+              {hasProcessedDocs && (
+                <div
+                  onClick={() => {
+                    if (!chatDisabled) {
+                      setShowMentionMenu(true);
+                      setMentionFilter("");
+                      inputRef.current?.focus();
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 text-[13px] font-medium cursor-pointer ${
+                    chatDisabled
+                      ? isDark ? "text-gray-600" : "text-gray-300"
+                      : isDark ? "text-gray-400 hover:text-gray-200" : "text-secondary hover:text-main"
+                  }`}
+                >
+                  <At size={16} /> Mention
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.txt"
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </div>
-            <div className="text-xs text-tertiary">20 / 3,000</div>
+            <div className={`text-xs ${isDark ? "text-gray-600" : "text-tertiary"}`}>{charCount} / 3,000</div>
           </div>
         </div>
 
-        <div className="text-center text-xs text-tertiary pb-4">
-          Script may generate inaccurate information about people, places, or facts. Model: Script AI v1.3.
+        <div className={`text-center text-xs pt-3 ${isDark ? "text-gray-600" : "text-tertiary"}`}>
+          Rag Bunny may generate inaccurate information. Always verify against your source documents.
         </div>
       </div>
     </main>

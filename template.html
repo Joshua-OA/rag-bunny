@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Script - AI Chat</title>
+    <title>Rag Bunny - AI Chat</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -690,76 +690,71 @@
         <aside class="sidebar-left">
             <div class="brand-header">
                 <div class="logo">
-                    <i class="ph-fill ph-circles-four"></i>
-                    Script
+                    <i class="ph-fill ph-rabbit"></i>
+                    Rag Bunny
                 </div>
                 <i class="ph ph-sidebar-simple" style="color: #9ca3af; font-size: 20px;"></i>
             </div>
 
             <div class="search-bar">
                 <i class="ph ph-magnifying-glass"></i>
-                <input type="text" placeholder="Search">
+                <input type="text" placeholder="Search chats...">
                 <span class="search-shortcut">⌘K</span>
             </div>
 
             <div class="nav-section">
                 <div class="nav-item active">
                     <div class="nav-item-left">
-                        <i class="ph-fill ph-folder" style="color: #3b82f6;"></i>
-                        <span>AI Chat</span>
-                    </div>
-                </div>
-                
-                <div class="nav-item">
-                    <div class="nav-item-left">
-                        <i class="ph ph-folder-notch"></i>
-                        <span>Projects</span>
-                    </div>
-                </div>
-
-                <div class="nav-item">
-                    <div class="nav-item-left">
-                        <i class="ph ph-text-t"></i>
-                        <span>Templates</span>
-                    </div>
-                </div>
-
-                <div class="nav-item">
-                    <div class="nav-item-left">
-                        <i class="ph ph-file-text"></i>
-                        <span>Documents</span>
-                    </div>
-                    <i class="ph ph-plus nav-item-right-icon"></i>
-                </div>
-
-                <div class="nav-item">
-                    <div class="nav-item-left">
-                        <i class="ph ph-users"></i>
-                        <span>Community</span>
-                    </div>
-                    <span class="badge-new">NEW</span>
-                </div>
-
-                <div class="nav-item">
-                    <div class="nav-item-left">
-                        <i class="ph ph-clock-counter-clockwise"></i>
-                        <span>History</span>
+                        <i class="ph-fill ph-plus-circle" style="color: #3b82f6;"></i>
+                        <span>New Chat</span>
                     </div>
                 </div>
             </div>
 
-            <div class="nav-label">Settings & Help</div>
+            <div class="nav-label">Today</div>
             <div class="nav-section">
                 <div class="nav-item">
                     <div class="nav-item-left">
-                        <i class="ph ph-gear"></i>
-                        <span>Settings</span>
+                        <i class="ph ph-chat-text"></i>
+                        <span>Company policy questions</span>
                     </div>
                 </div>
                 <div class="nav-item">
                     <div class="nav-item-left">
-                        <i class="ph ph-question"></i>
-                        <span>Help</span>
+                        <i class="ph ph-chat-text"></i>
+                        <span>Research summary</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-label">Yesterday</div>
+            <div class="nav-section">
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-chat-text"></i>
+                        <span>Q4 meeting highlights</span>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-chat-text"></i>
+                        <span>Product spec review</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-label">Previous 7 Days</div>
+            <div class="nav-section">
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-chat-text"></i>
+                        <span>Benefits overview</span>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-chat-text"></i>
+                        <span>Research methodology</span>
                     </div>
                 </div>
             </div>
@@ -788,60 +783,14 @@
             <header class="main-header">
                 <div class="header-title">AI Chat</div>
                 <div class="header-actions">
-                    <button class="upgrade-btn">
-                        <i class="ph-fill ph-lightning"></i> Upgrade
-                    </button>
                     <i class="ph ph-question header-icon"></i>
-                    <i class="ph ph-gift header-icon"></i>
-                    <i class="ph-fill ph-toggle-left header-icon" style="color: #111827;"></i>
                 </div>
             </header>
 
             <div class="chat-area">
-                <h1 class="welcome-title">Welcome to Script</h1>
-                <p class="welcome-subtitle">Get started by Script a task and Chat can do the rest. Not sure where to start?</p>
+                <h1 class="welcome-title">Welcome to Rag Bunny</h1>
+                <p class="welcome-subtitle">Upload your PDFs and ask questions. Rag Bunny will find the answers for you.</p>
 
-                <div class="prompts-grid">
-                    <div class="prompt-card">
-                        <div class="prompt-info">
-                            <div class="prompt-icon-box bg-orange">
-                                <i class="ph-fill ph-file-text"></i>
-                            </div>
-                            <span class="prompt-text">Write copy</span>
-                        </div>
-                        <i class="ph ph-plus prompt-add"></i>
-                    </div>
-
-                    <div class="prompt-card">
-                        <div class="prompt-info">
-                            <div class="prompt-icon-box bg-blue">
-                                <i class="ph-fill ph-sparkle"></i>
-                            </div>
-                            <span class="prompt-text">Image generation</span>
-                        </div>
-                        <i class="ph ph-plus prompt-add"></i>
-                    </div>
-
-                    <div class="prompt-card">
-                        <div class="prompt-info">
-                            <div class="prompt-icon-box bg-green">
-                                <i class="ph-fill ph-user"></i>
-                            </div>
-                            <span class="prompt-text">Create avatar</span>
-                        </div>
-                        <i class="ph ph-plus prompt-add"></i>
-                    </div>
-
-                    <div class="prompt-card">
-                        <div class="prompt-info">
-                            <div class="prompt-icon-box bg-pink">
-                                <i class="ph-fill ph-browser"></i>
-                            </div>
-                            <span class="prompt-text">Write code</span>
-                        </div>
-                        <i class="ph ph-plus prompt-add"></i>
-                    </div>
-                </div>
 
                 <div class="input-container">
                     <div class="input-box">
@@ -855,68 +804,50 @@
                             <div class="toolbar-btn">
                                 <i class="ph ph-paperclip"></i> Attach
                             </div>
-                            <div class="toolbar-btn">
-                                <i class="ph ph-microphone"></i> Voice Message
-                            </div>
-                            <div class="toolbar-btn">
-                                <i class="ph ph-squares-four"></i> Browse Prompts
-                            </div>
                         </div>
                         <div class="char-count">20 / 3,000</div>
                     </div>
                 </div>
 
                 <div class="disclaimer">
-                    Script may generate inaccurate information about people, places, or facts. Model: Script AI v1.3.
+                    Rag Bunny may generate inaccurate information. Always verify against your source documents.
                 </div>
             </div>
         </main>
 
         <aside class="sidebar-right">
             <div class="projects-header">
-                <span class="projects-title">Projects (7)</span>
+                <span class="projects-title">Uploaded PDFs (4)</span>
                 <i class="ph ph-dots-three"></i>
             </div>
 
             <div class="project-list">
                 <div class="project-item new-project">
-                    <div class="project-title" style="margin-bottom:0;">New Project</div>
+                    <div class="project-title" style="margin-bottom:0;">Upload PDF</div>
                     <div class="circle-indicator"></div>
                 </div>
 
                 <div class="project-item">
-                    <div class="project-title">Learning From 100 Years o...</div>
-                    <div class="project-desc">For athletes, high altitude prod...</div>
+                    <div class="project-title"><i class="ph ph-file-pdf" style="color: #ef4444; margin-right: 6px;"></i>Company_Handbook.pdf</div>
+                    <div class="project-desc">2.4 MB — Uploaded Jan 15</div>
                     <div class="circle-indicator"></div>
                 </div>
 
                 <div class="project-item">
-                    <div class="project-title">Research officiants</div>
-                    <div class="project-desc">Maxwell's equations—the foun...</div>
+                    <div class="project-title"><i class="ph ph-file-pdf" style="color: #ef4444; margin-right: 6px;"></i>Research_Paper.pdf</div>
+                    <div class="project-desc">1.8 MB — Uploaded Jan 12</div>
                     <div class="circle-indicator"></div>
                 </div>
 
                 <div class="project-item">
-                    <div class="project-title">What does a senior lead de...</div>
-                    <div class="project-desc">Physiological respiration involv...</div>
+                    <div class="project-title"><i class="ph ph-file-pdf" style="color: #ef4444; margin-right: 6px;"></i>Meeting_Notes_Q4.pdf</div>
+                    <div class="project-desc">540 KB — Uploaded Jan 10</div>
                     <div class="circle-indicator"></div>
                 </div>
 
                 <div class="project-item">
-                    <div class="project-title">Write a sweet note to your...</div>
-                    <div class="project-desc">In the eighteenth century the G...</div>
-                    <div class="circle-indicator"></div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-title">Meet with cake bakers</div>
-                    <div class="project-desc">Physical space is often conceiv...</div>
-                    <div class="circle-indicator"></div>
-                </div>
-
-                <div class="project-item">
-                    <div class="project-title">Meet with cake bakers</div>
-                    <div class="project-desc">Physical space is often conceiv...</div>
+                    <div class="project-title"><i class="ph ph-file-pdf" style="color: #ef4444; margin-right: 6px;"></i>Product_Specs.pdf</div>
+                    <div class="project-desc">3.1 MB — Uploaded Jan 8</div>
                     <div class="circle-indicator"></div>
                 </div>
             </div>

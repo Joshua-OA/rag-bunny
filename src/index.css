@@ -8,11 +8,26 @@
   --color-main: #111827;
   --color-secondary: #6b7280;
   --color-tertiary: #9ca3af;
-  --color-primary-blue: #2563eb;
-  --color-accent-blue: #3b82f6;
+  --color-primary-blue: #1e3a5f;
+  --color-accent-blue: #1e3a5f;
 }
 
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out;
 }
