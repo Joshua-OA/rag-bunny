@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script - AI Chat</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #eaecf0;
+            --bg-app: #ffffff;
+            --bg-sidebar: #fcfcfc;
+            --bg-hover: #f3f4f6;
+            --border-color: #f0f0f0;
+            --text-main: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --primary-blue: #2563eb;
+            --accent-new: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- Browser Chrome --- */
+        .browser-window {
+            width: 100%;
+            max-width: 1440px;
+            height: 90vh;
+            background: var(--bg-app);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .browser-header {
+            height: 52px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 8px;
+            width: 100px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
+
+        .browser-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .browser-arrows {
+            display: flex;
+            gap: 12px;
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .browser-address {
+            background: #f3f4f6;
+            padding: 6px 16px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 400px;
+            justify-content: center;
+            font-size: 13px;
+            color: #4b5563;
+            position: relative;
+        }
+
+        .browser-address i.ph-lock-key {
+            font-size: 14px;
+            color: #6b7280;
+            position: absolute;
+            left: 12px;
+        }
+        
+        .browser-address i.ph-arrow-clockwise {
+            font-size: 14px;
+            color: #6b7280;
+            position: absolute;
+            right: 12px;
+        }
+
+        .browser-actions {
+            display: flex;
+            gap: 16px;
+            color: #6b7280;
+            font-size: 18px;
+            width: 100px;
+            justify-content: flex-end;
+        }
+
+        /* --- App Layout --- */
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- Left Sidebar --- */
+        .sidebar-left {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-main);
+        }
+
+        .logo i {
+            font-size: 20px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-left: 8px;
+            margin-right: 8px;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            margin-left: 8px;
+            font-size: 13px;
+        }
+
+        .search-shortcut {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding: 0 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: all 0.2s;
+        }
+
+        .nav-item.active {
+            background: #ffffff;
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #f0f0f0;
+        }
+
+        .nav-item:hover:not(.active) {
+            background: var(--bg-hover);
+        }
+
+        .nav-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item-left i {
+            font-size: 18px;
+            color: var(--text-tertiary);
+        }
+
+        .nav-item.active .nav-item-left i {
+            color: var(--primary-blue);
+        }
+
+        .badge-new {
+            background: var(--accent-new);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .nav-item-right-icon {
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 16px;
+        }
+
+        .theme-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            margin: 0 8px 16px 8px;
+        }
+
+        .theme-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            padding: 6px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .theme-btn.active {
+            background: #ffffff;
+            color: var(--text-main);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: url('https://i.pravatar.cc/150?img=32') center/cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-handle {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            background: var(--bg-app);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .main-header {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid transparent;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .upgrade-btn {
+            background: #111827;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .upgrade-btn i {
+            color: #fbbf24;
+        }
+
+        .header-icon {
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .prompts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            max-width: 560px;
+            margin-bottom: 60px;
+        }
+
+        .prompt-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .prompt-card:hover {
+            border-color: #d1d5db;
+        }
+
+        .prompt-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .prompt-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .bg-orange { background: #ffedd5; color: #f97316; }
+        .bg-blue { background: #dbeafe; color: #3b82f6; }
+        .bg-green { background: #dcfce7; color: #22c55e; }
+        .bg-pink { background: #fce7f3; color: #ec4899; }
+
+        .prompt-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .prompt-add {
+            color: var(--text-tertiary);
+            font-size: 16px;
+        }
+
+        .input-container {
+            width: 100%;
+            max-width: 760px;
+            margin: auto auto 24px auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .input-box input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .send-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .toolbar-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .toolbar-btn i {
+            font-size: 16px;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            padding-bottom: 16px;
+        }
+
+        /* --- Right Sidebar --- */
+        .sidebar-right {
+            width: 280px;
+            border-left: 1px solid var(--border-color);
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .projects-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid transparent;
+        }
+
+        .projects-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .projects-header i {
+            color: var(--text-tertiary);
+            cursor: pointer;
+        }
+
+        .project-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 12px;
+        }
+
+        .project-item {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .project-item.new-project {
+            border-style: dashed;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .project-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .circle-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: #fafafa;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .project-item.new-project .circle-indicator {
+            position: static;
+            transform: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .project-item.new-project .circle-indicator::after {
+            content: '-';
+            color: #ccc;
+            line-height: 1;
+        }
+
+        .fab-button {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fab-inner {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="browser-window">
+    <div class="browser-header">
+        <div class="browser-dots">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+        </div>
+        
+        <div class="browser-nav">
+            <div class="browser-arrows">
+                <i class="ph ph-caret-left"></i>
+                <i class="ph ph-caret-right"></i>
+            </div>
+            <div class="browser-address">
+                <i class="ph ph-lock-key"></i>
+                unspace.agency
+                <i class="ph ph-arrow-clockwise"></i>
+            </div>
+        </div>
+
+        <div class="browser-actions">
+            <i class="ph ph-export"></i>
+            <i class="ph ph-plus"></i>
+            <i class="ph ph-copy"></i>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <aside class="sidebar-left">
+            <div class="brand-header">
+                <div class="logo">
+                    <i class="ph-fill ph-circles-four"></i>
+                    Script
+                </div>
+                <i class="ph ph-sidebar-simple" style="color: #9ca3af; font-size: 20px;"></i>
+            </div>
+
+            <div class="search-bar">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" placeholder="Search">
+                <span class="search-shortcut">⌘K</span>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-item active">
+                    <div class="nav-item-left">
+                        <i class="ph-fill ph-folder" style="color: #3b82f6;"></i>
+                        <span>AI Chat</span>
+                    </div>
+                </div>
+                
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-folder-notch"></i>
+                        <span>Projects</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-text-t"></i>
+                        <span>Templates</span>
+                    </div>
+                </div>
+
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-file-text"></i>
+                        <span>Documents</span>
+                    </div>
+                    <i class="ph ph-plus nav-item-right-icon"></i>
+                </div>
+
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-users"></i>
+                        <span>Community</span>
+                    </div>
+                    <span class="badge-new">NEW</span>
+                </div>
+
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-clock-counter-clockwise"></i>
+                        <span>History</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-label">Settings & Help</div>
+            <div class="nav-section">
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-gear"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-item-left">
+                        <i class="ph ph-question"></i>
+                        <span>Help</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="theme-toggle">
+                    <div class="theme-btn active">
+                        <i class="ph ph-sun"></i> Light
+                    </div>
+                    <div class="theme-btn">
+                        <i class="ph ph-moon"></i> Dark
+                    </div>
+                </div>
+
+                <div class="user-profile">
+                    <div class="user-avatar"></div>
+                    <div class="user-info">
+                        <span class="user-name">Emilia Caitlin</span>
+                        <span class="user-handle">hey@unspace.agency</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">AI Chat</div>
+                <div class="header-actions">
+                    <button class="upgrade-btn">
+                        <i class="ph-fill ph-lightning"></i> Upgrade
+                    </button>
+                    <i class="ph ph-question header-icon"></i>
+                    <i class="ph ph-gift header-icon"></i>
+                    <i class="ph-fill ph-toggle-left header-icon" style="color: #111827;"></i>
+                </div>
+            </header>
+
+            <div class="chat-area">
+                <h1 class="welcome-title">Welcome to Script</h1>
+                <p class="welcome-subtitle">Get started by Script a task and Chat can do the rest. Not sure where to start?</p>
+
+                <div class="prompts-grid">
+                    <div class="prompt-card">
+                        <div class="prompt-info">
+                            <div class="prompt-icon-box bg-orange">
+                                <i class="ph-fill ph-file-text"></i>
+                            </div>
+                            <span class="prompt-text">Write copy</span>
+                        </div>
+                        <i class="ph ph-plus prompt-add"></i>
+                    </div>
+
+                    <div class="prompt-card">
+                        <div class="prompt-info">
+                            <div class="prompt-icon-box bg-blue">
+                                <i class="ph-fill ph-sparkle"></i>
+                            </div>
+                            <span class="prompt-text">Image generation</span>
+                        </div>
+                        <i class="ph ph-plus prompt-add"></i>
+                    </div>
+
+                    <div class="prompt-card">
+                        <div class="prompt-info">
+                            <div class="prompt-icon-box bg-green">
+                                <i class="ph-fill ph-user"></i>
+                            </div>
+                            <span class="prompt-text">Create avatar</span>
+                        </div>
+                        <i class="ph ph-plus prompt-add"></i>
+                    </div>
+
+                    <div class="prompt-card">
+                        <div class="prompt-info">
+                            <div class="prompt-icon-box bg-pink">
+                                <i class="ph-fill ph-browser"></i>
+                            </div>
+                            <span class="prompt-text">Write code</span>
+                        </div>
+                        <i class="ph ph-plus prompt-add"></i>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <div class="input-box">
+                        <input type="text" value="Summarize the latest|" placeholder="Ask anything...">
+                        <button class="send-btn">
+                            <i class="ph ph-paper-plane-right"></i>
+                        </button>
+                    </div>
+                    <div class="input-toolbar">
+                        <div class="toolbar-actions">
+                            <div class="toolbar-btn">
+                                <i class="ph ph-paperclip"></i> Attach
+                            </div>
+                            <div class="toolbar-btn">
+                                <i class="ph ph-microphone"></i> Voice Message
+                            </div>
+                            <div class="toolbar-btn">
+                                <i class="ph ph-squares-four"></i> Browse Prompts
+                            </div>
+                        </div>
+                        <div class="char-count">20 / 3,000</div>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    Script may generate inaccurate information about people, places, or facts. Model: Script AI v1.3.
+                </div>
+            </div>
+        </main>
+
+        <aside class="sidebar-right">
+            <div class="projects-header">
+                <span class="projects-title">Projects (7)</span>
+                <i class="ph ph-dots-three"></i>
+            </div>
+
+            <div class="project-list">
+                <div class="project-item new-project">
+                    <div class="project-title" style="margin-bottom:0;">New Project</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">Learning From 100 Years o...</div>
+                    <div class="project-desc">For athletes, high altitude prod...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">Research officiants</div>
+                    <div class="project-desc">Maxwell's equations—the foun...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">What does a senior lead de...</div>
+                    <div class="project-desc">Physiological respiration involv...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">Write a sweet note to your...</div>
+                    <div class="project-desc">In the eighteenth century the G...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">Meet with cake bakers</div>
+                    <div class="project-desc">Physical space is often conceiv...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+
+                <div class="project-item">
+                    <div class="project-title">Meet with cake bakers</div>
+                    <div class="project-desc">Physical space is often conceiv...</div>
+                    <div class="circle-indicator"></div>
+                </div>
+            </div>
+
+            <div class="fab-button">
+                <div class="fab-inner"></div>
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+</body>
+</html>
