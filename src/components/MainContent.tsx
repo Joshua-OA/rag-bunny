@@ -11,9 +11,11 @@ import {
   Spinner,
   At,
   X,
+  Wrench,
+  CaretDown,
 } from "@phosphor-icons/react";
 import type { Chat, PdfFile } from "../App";
-import type { Citation } from "../api";
+import type { Citation, ToolCall } from "../api";
 
 interface MainContentProps {
   chat: Chat | null;
@@ -56,6 +58,86 @@ function CitationCard({ citation, isDark }: { citation: Citation; isDark: boolea
   );
 }
 
+function ToolCallsSection({ toolCalls, isDark }: { toolCalls: ToolCall[]; isDark: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="mt-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className={`flex items-center gap-1.5 text-xs font-semibold bg-transparent border-none cursor-pointer p-0 ${
+          isDark ? "text-gray-500 hover:text-gray-400" : "text-tertiary hover:text-secondary"
+        }`}
+      >
+        <Wrench size={14} />
+        {toolCalls.length} tool{toolCalls.length > 1 ? "s" : ""} used
+        <CaretDown size={12} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      {expanded && (
+        <div className="mt-2 space-y-2">
+          {toolCalls.map((tc, i) => (
+            <div
+              key={i}
+              className={`p-2.5 rounded-lg border text-xs ${
+                isDark ? "border-gray-700 bg-gray-800/50" : "border-border bg-gray-50"
+              }`}
+            >
+              <div className={`font-semibold ${isDark ? "text-gray-300" : "text-main"}`}>
+                {tc.tool_name}
+              </div>
+              <div className={`mt-1 font-mono text-[11px] leading-relaxed ${isDark ? "text-gray-500" : "text-tertiary"}`}>
+                {JSON.stringify(tc.args)}
+              </div>
+              <div className={`mt-1.5 leading-relaxed line-clamp-3 ${isDark ? "text-gray-400" : "text-secondary"}`}>
+                {tc.result}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const LOADING_STEPS = [
+  "Thinking...",
+  "Checking calendar...",
+  "Checking emails...",
+  "Searching documents...",
+  "Analyzing results...",
+  "Putting it all together...",
+];
+
+function LoadingStatus() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep((s) => (s + 1 < LOADING_STEPS.length ? s + 1 : s));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="space-y-1">
+      {LOADING_STEPS.slice(0, step + 1).map((text, i) => (
+        <div
+          key={text}
+          className={`flex items-center gap-2 text-sm transition-opacity duration-300 ${
+            i < step ? "opacity-50" : "opacity-100"
+          }`}
+        >
+          {i === step ? (
+            <Spinner size={14} className="animate-spin shrink-0" />
+          ) : (
+            <span className="text-green-500 shrink-0 text-xs">✓</span>
+          )}
+          {text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function isTxt(name: string) {
   return name.toLowerCase().endsWith(".txt");
 }
@@ -83,7 +165,7 @@ export default function MainContent({
   const mentionMenuRef = useRef<HTMLDivElement>(null);
   const isDark = theme === "dark";
 
-  const chatDisabled = !hasProcessedDocs || isLoading;
+  const chatDisabled = isLoading;
 
   const filteredMentionPdfs = processedPdfs.filter((p) =>
     p.name.toLowerCase().includes(mentionFilter.toLowerCase())
@@ -193,9 +275,7 @@ export default function MainContent({
 
   const charCount = input.length;
 
-  const placeholderText = !hasProcessedDocs
-    ? "Upload a document first to start asking questions..."
-    : "Ask anything about your documents... (type @ to select a doc)";
+  const placeholderText = "Ask anything... (type @ to select a doc for targeted answers)";
 
   return (
     <main className={`flex-1 flex flex-col relative transition-colors ${isDark ? "bg-gray-950" : "bg-white"}`}>
@@ -259,6 +339,10 @@ export default function MainContent({
                       ))}
                     </div>
                   )}
+                  {/* Tool calls */}
+                  {msg.toolCalls && msg.toolCalls.length > 0 && (
+                    <ToolCallsSection toolCalls={msg.toolCalls} isDark={isDark} />
+                  )}
                   {/* Confidence badge */}
                   {msg.confidence && (
                     <div className={`mt-2 inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
@@ -283,9 +367,8 @@ export default function MainContent({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className={`text-sm font-semibold mb-1 ${isDark ? "text-white" : "text-main"}`}>Rag Bunny</div>
-                  <div className={`flex items-center gap-2 text-sm ${isDark ? "text-gray-400" : "text-secondary"}`}>
-                    <Spinner size={16} className="animate-spin" />
-                    Searching your documents...
+                  <div className={isDark ? "text-gray-400" : "text-secondary"}>
+                    <LoadingStatus />
                   </div>
                 </div>
               </div>
@@ -369,7 +452,7 @@ export default function MainContent({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholderText}
-              disabled={!hasProcessedDocs || isLoading}
+              disabled={isLoading}
               className={`w-full border-none outline-none text-[15px] bg-transparent ${isDark ? "text-white placeholder:text-gray-600" : "text-main"} ${chatDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
             />
             <button

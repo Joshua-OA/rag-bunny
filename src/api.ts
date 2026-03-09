@@ -59,6 +59,32 @@ export async function fetchDocuments(): Promise<DocumentsResponse> {
   return res.json();
 }
 
+export interface ToolCall {
+  tool_name: string;
+  args: Record<string, unknown>;
+  result: string;
+}
+
+export interface AgentChatResponse {
+  response: string;
+  tool_calls: ToolCall[];
+}
+
+export async function agentChat(message: string): Promise<AgentChatResponse> {
+  const res = await fetch(`${BASE_URL}/agent/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`Agent chat failed: ${text}`);
+  }
+
+  return res.json();
+}
+
 export async function askQuestion(
   question: string,
   documentId?: string
